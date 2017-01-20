@@ -14,7 +14,7 @@ public class Scrap {
 	public static void main(String args[]){
 		String page = "http://www.infomoney.com.br/ultimas-noticias/pagina/" ; 
 		String selector = ".cm-mg-5-b";
-		Scrap2 test = new Scrap2();
+		CountWords test = new CountWords();
 		for (int i = 1; i<21;  i++)
 			test.addWords(page + i, selector);
 		List<String> blackList = test.getBlackList();
@@ -25,7 +25,7 @@ public class Scrap {
 		System.out.println("Fim");
 	}
 
-	public static class Scrap2 {
+	public static class CountWords {
 		String[] bl = {"a","as","da","das","na","nas",
 					   "e","de","em",
 					   "o","os","do","dos","no","nos",
@@ -33,37 +33,48 @@ public class Scrap {
 		List<String> blackList = new ArrayList<>();
 		HashMap<String, Integer> words = new HashMap<String, Integer>();
 		
-		public Scrap2(){
+		public CountWords(){
 			for (int i =0 ; i< bl.length; i++)
 				blackList.add(bl[i]);
-		}
+		}		
 		
 		public HashMap<String, Integer> getWords() {return words;}
 		public List<String> getBlackList() {return blackList;}
+		
+		//return top max from words
+		public HashMap<String, Integer> top(int max){
+			//Mergesort.sort(words);
+			return words;
+		}
 		
 		public void addWords(String page, String selector) {
 			Document doc = null;
 			try {
 				doc = Jsoup.connect(page).get();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+
 			Elements newsHeadlines = doc.select(selector);
 			newsHeadlines.forEach((item) -> {
 				String[] w = item.text().split(" ");
-				for (int i =0; i< w.length; i++){
-					String key = Normalizer
-					           .normalize(w[i], Normalizer.Form.NFD)
-					           .replaceAll("[^\\p{ASCII}]", "")
-					           .toLowerCase(); //Normalize string to count
-					if ( words.get(key) != null)
-						words.replace(key, words.get(key) + 1);
-					else
-						words.put(key, 1);
-				}
-				//System.out.println(item.attr("href"));
+				for (int i =0; i< w.length; i++)
+					addItem(normalizeString(w[i]));
 			});
+		}
+		
+		private String normalizeString(String s){
+			return Normalizer.normalize(s, Normalizer.Form.NFD)
+			          .replaceAll("[^\\p{ASCII}]", "")
+			          .toLowerCase(); //Normalize string to count
+		}
+		
+		public void addItem(String key){
+			Integer value = words.get(key);
+			if ( value != null)
+				words.replace(key, value + 1);
+			else
+				words.put(key, 1);
 		}
 	}
 }
